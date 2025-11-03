@@ -1,125 +1,164 @@
-const auth = require('../auth');
 const User = require('../models/user-model');
+const auth = require('../auth');          
 const bcrypt = require('bcryptjs');
 
-getLoggedIn = async (req, res) => {
+
+const getLoggedIn = async (req, res) => {
     try {
-        let userId = auth.verifyUser(req);
+        const userId = auth.verifyUser(req); 
         if (!userId) {
+            console.log("No valid token found");
             return res.status(200).json({
                 loggedIn: false,
                 user: null
             });
         }
 
-        const loggedInUser = await User.findOne({ _id: userId });
+        const loggedInUser = await User.findById(userId);
+        if (!loggedInUser) {
+            console.log("User not found for token");
+            return res.status(200).json({
+                loggedIn: false,
+                user: null
+            });
+        }
 
+        console.log("User logged in:", loggedInUser.email);
         return res.status(200).json({
             loggedIn: true,
             user: {
+                _id: loggedInUser._id,
                 firstName: loggedInUser.firstName,
                 lastName: loggedInUser.lastName,
                 email: loggedInUser.email
             }
         });
     } catch (err) {
-        console.log("err: " + err);
-        res.status(200).json({ loggedIn: false, user: null });
+        console.error("getLoggedIn error:", err);
+        return res.status(200).json({
+            loggedIn: false,
+            user: null
+        });
     }
 };
 
-loginUser = async (req, res) => {
+
+const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password)
-            return res.status(400).json({ errorMessage: "Please enter all required fields." });
+        const existingUser = await User.findOne({ email: email });
+        if (!existingUser) {
+            return res.status(400).json({
+                errorMessage: "Wrong email or password"
+            });
+        }
 
-        const existingUser = await User.findOne({ email });
-        if (!existingUser)
-            return res.status(401).json({ errorMessage: "Wrong email or password provided." });
+        const correctPassword = await bcrypt.compare(password, existingUser.passwordHash);
+        if (!correctPassword) {
+            return res.status(400).json({
+                errorMessage: "Wrong email or password"
+            });
+        }
 
-        const passwordCorrect = await bcrypt.compare(password, existingUser.passwordHash);
-        if (!passwordCorrect)
-            return res.status(401).json({ errorMessage: "Wrong email or password provided." });
+  
+        const token = auth.signToken(existingUser._id.toString());
 
-        const token = auth.signToken(existingUser._id);
-
-        // ← the important part
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,          // localhost = false
-            sameSite: "lax"         // works with http://localhost:3000 → 4000
-        }).status(200).json({
-            success: true,
+            sameSite: "lax",
+            secure: false 
+        });
+
+        return res.status(200).json({
             user: {
+                _id: existingUser._id,
                 firstName: existingUser.firstName,
                 lastName: existingUser.lastName,
                 email: existingUser.email
-            }
+            },
+            loggedIn: true
         });
-
     } catch (err) {
-        console.error(err);
-        res.status(500).send();
+        console.error("loginUser error:", err);
+        return res.status(500).json({
+            errorMessage: "Server error while logging in"
+        });
     }
 };
 
-logoutUser = async (req, res) => {
-    res.cookie("token", "", {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        expires: new Date(0)
-    }).send();
-};
-
-registerUser = async (req, res) => {
+/**
+ * POST /auth/register
+ * (you already have users, but keep it correct)
+ */
+const registerUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password, passwordVerify } = req.body;
 
-        if (!firstName || !lastName || !email || !password || !passwordVerify)
-            return res.status(400).json({ errorMessage: "Please enter all required fields." });
+        if (password !== passwordVerify) {
+            return res.status(400).json({
+                errorMessage: "Passwords do not match"
+            });
+        }
 
-        if (password.length < 8)
-            return res.status(400).json({ errorMessage: "Please enter a password of at least 8 characters." });
-
-        if (password !== passwordVerify)
-            return res.status(400).json({ errorMessage: "Please enter the same password twice." });
-
-        const existingUser = await User.findOne({ email });
-        if (existingUser)
-            return res.status(400).json({ errorMessage: "An account with this email address already exists." });
+        const existingUser = await User.findOne({ email: email });
+        if (existingUser) {
+            return res.status(400).json({
+                errorMessage: "An account with this email already exists."
+            });
+        }
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        const newUser = new User({ firstName, lastName, email, passwordHash });
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            passwordHash,
+            playlists: []
+        });
+
         const savedUser = await newUser.save();
 
-        const token = auth.signToken(savedUser._id);
-
+        // sign and send token immediately if you want
+        const token = auth.signToken(savedUser._id.toString());
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        }).status(200).json({
-            success: true,
+            sameSite: "lax",
+            secure: false
+        });
+
+        return res.status(200).json({
             user: {
+                _id: savedUser._id,
                 firstName: savedUser.firstName,
                 lastName: savedUser.lastName,
                 email: savedUser.email
-            }
+            },
+            loggedIn: true
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send();
+        console.error("registerUser error:", err);
+        return res.status(500).json({
+            errorMessage: "Server error while registering"
+        });
     }
+};
+
+/**
+ * GET /auth/logout
+ */
+const logoutUser = (req, res) => {
+    res.clearCookie("token");
+    return res.status(200).json({
+        loggedIn: false
+    });
 };
 
 module.exports = {
     getLoggedIn,
-    registerUser,
     loginUser,
+    registerUser,
     logoutUser
 };

@@ -67,7 +67,6 @@ deletePlaylist = async (req, res) => {
             });
         }
 
-        // DOES THIS LIST BELONG TO THIS USER?
         async function asyncFindUser(list) {
             User.findOne({ email: list.ownerEmail }, (err, user) => {
                 console.log("user._id: " + user._id);
@@ -104,7 +103,6 @@ getPlaylistById = async (req, res) => {
         }
         console.log("Found list: " + JSON.stringify(list));
 
-        // DOES THIS LIST BELONG TO THIS USER?
         async function asyncFindUser(list) {
             await User.findOne({ email: list.ownerEmail }, (err, user) => {
                 console.log("user._id: " + user._id);
@@ -132,7 +130,6 @@ getPlaylistPairs = async (req, res) => {
     console.log("getPlaylistPairs");
 
     try {
-        // find current user
         const user = await User.findById(req.userId);
         console.log("find user with id " + req.userId);
 
@@ -147,11 +144,9 @@ getPlaylistPairs = async (req, res) => {
         const pairs = playlists.map((list) => ({
             _id: list._id,
             name: list.name,
-            // you can add more fields if the UI ever needs them
             ownerEmail: list.ownerEmail
         }));
 
-        // 👇 this field name is what your React app expects
         return res.status(200).json({ playlistPairs: pairs });
     } catch (err) {
         console.error("getPlaylistPairs error:", err);
@@ -204,7 +199,6 @@ updatePlaylist = async (req, res) => {
             });
         }
 
-        // DOES THIS LIST BELONG TO THIS USER?
         async function asyncFindUser(list) {
             await User.findOne({ email: list.ownerEmail }, (err, user) => {
                 console.log("user._id: " + user._id);
