@@ -10,8 +10,8 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: ["http://localhost:3000"],
-    credentials: true
+  origin: [process.env.ORIGIN || "http://localhost:3000"],
+  credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -27,17 +27,17 @@ app.use('/store', storeRouter);
 const db = require('./db');
 
 async function start() {
-    try {
-        await db.connect();
-        console.log("DB connected");
+  try {
+    await db.connect();            // <- this should now be the Mongo connect
+    console.log('DB connected');
 
-        app.listen(PORT, () => {
-            console.log(`Playlister Server running on port ${PORT}`);
-        });
-    } catch (err) {
-        console.error("Failed to start server:", err);
-        process.exit(1);
-    }
+    app.listen(PORT, () => {
+      console.log(`Playlister Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
 }
 
 start();

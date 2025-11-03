@@ -1,17 +1,15 @@
-
 const dotenv = require('dotenv');
 dotenv.config();
 
-let dbManager = null;
+const manager = (process.env.DB_MANAGER || 'mongo').toLowerCase();
 
-if (process.env.DB_MANAGER === 'postgres') {
-    console.log("Using PostgreSQL DatabaseManager");
-    dbManager = require('./postgresql');
+let db;
+if (manager === 'postgres') {
+  db = require('./postgresql');
+  console.log('Using PostgreSQL DatabaseManager');
 } else {
-    console.log("Using MongoDB DatabaseManager");
-    dbManager = require('./mongodb');
+  db = require('./mongodb');
+  console.log('Using MongoDB DatabaseManager');
 }
 
-module.exports = dbManager;
-
-
+module.exports = db;
