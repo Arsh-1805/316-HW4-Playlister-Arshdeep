@@ -17,35 +17,27 @@ async function fetchJSON(url, options = {}) {
   return { status: res.status, data };
 }
 
-// 1) these two really are /api/...
-export const getPlaylistPairs = () =>
-  fetchJSON(`${API_BASE}/api/playlistpairs`, {
-    method: "GET",
-  });
+const getPlaylistPairs = () =>
+  fetchJSON(`${API_BASE}/api/playlistpairs`, { method: "GET" });
 
-export const getPlaylistById = (id) =>
-  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
-    method: "GET",
-  });
+const getPlaylistById = (id) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, { method: "GET" });
 
-export const createPlaylist = (name, songs = [], ownerEmail) =>
-  fetchJSON(`${API_BASE}/store/playlist`, {
+const createPlaylist = (name, songs = [], ownerEmail) =>
+  fetchJSON(`${API_BASE}/api/playlist`, {
     method: "POST",
-    body: JSON.stringify({
-      name,
-      ownerEmail,
-      songs,
-    }),
+    body: JSON.stringify({ name, songs, ownerEmail }),
   });
 
-export const updatePlaylistById = (id, playlist) =>
-  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
+
+const updatePlaylistById = (id, playlist) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ playlist }),
+    body: JSON.stringify({ playlist }),   
   });
 
-export const deletePlaylistById = (id) =>
-  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
+const deletePlaylistById = (id) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
     method: "DELETE",
   });
 
