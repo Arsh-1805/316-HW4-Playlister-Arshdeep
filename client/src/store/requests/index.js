@@ -1,41 +1,57 @@
-const API_BASE_URL = "http://localhost:4000";
+const API_BASE = "http://localhost:4000";
 
 async function fetchJSON(url, options = {}) {
   const res = await fetch(url, {
-    credentials: "include",            
-    headers: {
-      "Content-Type": "application/json",
-    },
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     ...options,
   });
-  const data = await res.json();
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = null;
+  }
+
   return { status: res.status, data };
 }
 
 export const getPlaylistPairs = () =>
-  fetchJSON(`${API_BASE_URL}/api/playlistpairs`, {
+  fetchJSON(`${API_BASE}/api/playlistpairs`, {
     method: "GET",
   });
 
-export const createPlaylist = () =>
-  fetchJSON(`${API_BASE_URL}/store/playlist`, {
+export const getPlaylistById = (id) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
+    method: "GET",
+  });
+
+
+export const createPlaylist = (name, ownerEmail) =>
+  fetchJSON(`${API_BASE}/store/playlist`, {
     method: "POST",
-    body: JSON.stringify({}), 
+    body: JSON.stringify({
+      name,
+      ownerEmail,
+      songs: [],
+    }),
   });
 
 export const updatePlaylist = (id, playlist) =>
-  fetchJSON(`${API_BASE_URL}/store/playlist/${id}`, {
+  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
     method: "PUT",
     body: JSON.stringify({ playlist }),
   });
 
 export const deletePlaylist = (id) =>
-  fetchJSON(`${API_BASE_URL}/store/playlist/${id}`, {
+  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
     method: "DELETE",
   });
 
 const apis = {
   getPlaylistPairs,
+  getPlaylistById,
   createPlaylist,
   updatePlaylist,
   deletePlaylist,
