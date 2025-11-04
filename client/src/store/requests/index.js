@@ -18,34 +18,25 @@ async function fetchJSON(url, options = {}) {
 }
 
 export const getPlaylistPairs = () =>
-  fetchJSON(`${API_BASE}/api/playlistpairs`, {
-    method: "GET",
-  });
+  fetchJSON(`${API_BASE}/api/playlistpairs`, { method: "GET" });
 
 export const getPlaylistById = (id) =>
-  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
-    method: "GET",
-  });
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, { method: "GET" });
 
-
-export const createPlaylist = (name, ownerEmail) =>
-  fetchJSON(`${API_BASE}/store/playlist`, {
+export const createPlaylist = (name, songs, ownerEmail) =>
+  fetchJSON(`${API_BASE}/api/playlist`, {
     method: "POST",
-    body: JSON.stringify({
-      name,
-      ownerEmail,
-      songs: [],
-    }),
+    body: JSON.stringify({ name, songs, ownerEmail }),
   });
 
-export const updatePlaylist = (id, playlist) =>
-  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
+export const updatePlaylistById = (id, playlist) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
     method: "PUT",
     body: JSON.stringify({ playlist }),
   });
 
-export const deletePlaylist = (id) =>
-  fetchJSON(`${API_BASE}/store/playlist/${id}`, {
+export const deletePlaylistById = (id) =>
+  fetchJSON(`${API_BASE}/api/playlist/${id}`, {
     method: "DELETE",
   });
 
@@ -53,8 +44,8 @@ const apis = {
   getPlaylistPairs,
   getPlaylistById,
   createPlaylist,
-  updatePlaylist,
-  deletePlaylist,
+  updatePlaylistById,
+  deletePlaylistById, 
 };
 
 export default apis;
